@@ -2,23 +2,34 @@
 set -euo pipefail
 
 PORT="${DESKTOP_PORT:-6080}"
+VNC_PORT="${VNC_PORT:-5901}"
 
 has_cmd() {
   command -v "$1" >/dev/null 2>&1
 }
 
 port_is_listening() {
+  local port="$1"
+
   if has_cmd ss; then
-    ss -ltn | awk '{print $4}' | grep -Eq "[:.]${PORT}$"
+    ss -ltn | awk '{print $4}' | grep -Eq "[:.]${port}$"
     return
   fi
 
   if has_cmd netstat; then
-    netstat -ltn 2>/dev/null | awk '{print $4}' | grep -Eq "[:.]${PORT}$"
+    netstat -ltn 2>/dev/null | awk '{print $4}' | grep -Eq "[:.]${port}$"
     return
   fi
 
   return 1
+}
+
+novnc_is_listening() {
+  port_is_listening "$PORT"
+}
+
+vnc_is_listening() {
+  port_is_listening "$VNC_PORT"
 }
 
 desktop_url() {
@@ -50,10 +61,23 @@ try_start_desktop() {
   return 1
 }
 
+try_start_vnc_backend() {
+  if ! has_cmd tigervncserver; then
+    return 1
+  fi
+
+  tigervncserver -kill :1 >/dev/null 2>&1 || true
+  tigervncserver :1 -geometry 1440x768 -depth 16 -rfbport "$VNC_PORT" -dpi 96 -localhost -desktop fluxbox -SecurityTypes None >/dev/null 2>&1
+}
+
 print_status() {
-  if port_is_listening; then
+  if novnc_is_listening && vnc_is_listening; then
     echo "Desktop noVNC is listening on port ${PORT}."
+    echo "Desktop VNC backend is listening on port ${VNC_PORT}."
     echo "Desktop URL: $(desktop_url)"
+  elif novnc_is_listening; then
+    echo "Desktop noVNC is listening on port ${PORT}, but VNC backend is down on port ${VNC_PORT}."
+    echo "Run: ./scripts/codespace-desktop.sh start"
   else
     echo "Desktop noVNC is not currently listening on port ${PORT}."
     echo "Run: ./scripts/codespace-desktop.sh start"
@@ -61,7 +85,7 @@ print_status() {
 }
 
 start_and_wait() {
-  if port_is_listening; then
+  if novnc_is_listening && vnc_is_listening; then
     echo "Desktop noVNC is already running on port ${PORT}."
     echo "Desktop URL: $(desktop_url)"
     return 0
@@ -69,11 +93,13 @@ start_and_wait() {
 
   echo "Attempting to start desktop services..."
   try_start_desktop || true
+  vnc_is_listening || try_start_vnc_backend || true
 
   local i
   for i in $(seq 1 20); do
-    if port_is_listening; then
+    if novnc_is_listening && vnc_is_listening; then
       echo "Desktop noVNC is now available on port ${PORT}."
+      echo "Desktop VNC backend is now available on port ${VNC_PORT}."
       echo "Desktop URL: $(desktop_url)"
       return 0
     fi
