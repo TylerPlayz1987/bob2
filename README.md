@@ -4,6 +4,26 @@
 
 This repo is configured with the Desktop Lite devcontainer feature so you can run a lightweight Linux desktop inside GitHub Codespaces.
 
+## Local Dev Container for Flatpak Apps (Sober)
+
+GitHub Codespaces blocks kernel features needed by Flatpak sandboxing, so apps like Sober cannot run there.
+
+For local Docker/Dev Containers, use the local config with elevated container permissions:
+
+1. Open this repo in local VS Code (with Docker running).
+2. Run **Dev Containers: Reopen in Container** and choose `.devcontainer/devcontainer.local.json`.
+3. In the container terminal, install and configure Flatpak:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y flatpak
+flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak install --user flathub org.vinegarhq.Sober
+flatpak run org.vinegarhq.Sober
+```
+
+If VS Code does not prompt for config selection, run **Dev Containers: Open Folder in Container...** and pick `.devcontainer/devcontainer.local.json` manually.
+
 ### One-time setup
 
 1. Open this repo in a Codespace.
@@ -46,6 +66,50 @@ You can also run the script directly from terminal:
 ./scripts/desktop-appearance.sh light
 ./scripts/desktop-appearance.sh pick-wallpaper
 ./scripts/desktop-appearance.sh set-wallpaper /workspaces/bob2/wallpaper.jpg
+```
+
+### Install and run `.deb` apps (Chrome/Discord)
+
+Use these commands in the Codespace terminal (or desktop terminal).
+
+1. Install a `.deb` file safely (avoids `_apt` permission warnings from `~/Downloads`):
+
+```bash
+cp ~/Downloads/chrome.deb /tmp/chrome.deb
+chmod 644 /tmp/chrome.deb
+sudo apt-get update
+sudo apt-get install -y /tmp/chrome.deb
+```
+
+For Discord, replace filenames:
+
+```bash
+cp ~/Downloads/discord.deb /tmp/discord.deb
+chmod 644 /tmp/discord.deb
+sudo apt-get update
+sudo apt-get install -y /tmp/discord.deb
+```
+
+Or use the helper script for any `.deb` file:
+
+```bash
+chmod +x ./scripts/install-deb.sh
+./scripts/install-deb.sh ~/Downloads/chrome.deb
+./scripts/install-deb.sh ~/Downloads/discord.deb
+```
+
+2. Launch app from the desktop terminal:
+
+```bash
+google-chrome --no-sandbox --disable-dev-shm-usage
+discord --no-sandbox
+```
+
+3. Launch app from the VS Code/Codespace terminal (outside desktop):
+
+```bash
+DISPLAY=:1 google-chrome --no-sandbox --disable-dev-shm-usage
+DISPLAY=:1 discord --no-sandbox
 ```
 
 ### Health checks and troubleshooting

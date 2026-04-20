@@ -1,0 +1,12 @@
+{
+  "name": "bob2-local-flatpak",
+  "extends": "devcontainer.json",
+  "runArgs": [
+    "--privileged",
+    "--security-opt=seccomp=unconfined",
+    "--security-opt=apparmor=unconfined"
+  ],
+  "containerEnv": {
+    "FLATPAK_ENABLE_SDK_EXT": "1"
+  }
+}
