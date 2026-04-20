@@ -29,6 +29,25 @@ This command checks whether noVNC is already listening on port `6080`, attempts 
 
 You should see a Linux desktop in your browser tab. From there, launch Firefox or Chromium.
 
+### Appearance settings (Dark mode + wallpaper)
+
+You can now control appearance directly from the Fluxbox app menu:
+
+1. Open **Application Menu -> Appearance**.
+2. Select **Dark Mode** or **Light Mode**.
+3. Select **Pick Wallpaper** to choose an image.
+
+The chosen wallpaper is saved and reapplied on future desktop starts.
+
+You can also run the script directly from terminal:
+
+```bash
+./scripts/desktop-appearance.sh dark
+./scripts/desktop-appearance.sh light
+./scripts/desktop-appearance.sh pick-wallpaper
+./scripts/desktop-appearance.sh set-wallpaper /workspaces/bob2/wallpaper.jpg
+```
+
 ### Health checks and troubleshooting
 
 If port `6080` does not appear or the page does not load, run:
